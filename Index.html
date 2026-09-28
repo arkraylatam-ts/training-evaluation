@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evaluación de la capacitación ARKRAY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2F6; --card:#FFFFFF; --ink:#10263D; --muted:#566779; --line:#D3DCE6;
+  --lab:#1D5FA0; --lab-ink:#FFFFFF; --low:#C2413A; --mid:#B87510; --high:#1E8A6E; --err:#B3261E;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1826; --card:#132337; --ink:#E6EDF5; --muted:#9AAABB; --line:#27394E;
+    --lab:#5B9BD8; --lab-ink:#0C1826; --low:#D9564E; --mid:#D3952E; --high:#2FA884; --err:#F2786F;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1826; --card:#132337; --ink:#E6EDF5; --muted:#9AAABB; --line:#27394E;
+  --lab:#5B9BD8; --lab-ink:#0C1826; --low:#D9564E; --mid:#D3952E; --high:#2FA884; --err:#F2786F;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding:24px 20px 64px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:36px}
+.brand{font-weight:700;letter-spacing:.1em;font-size:16px;color:var(--lab)}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--card)}
+.lang button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:14px;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+h1{font-size:clamp(28px,5vw,40px);line-height:1.1;margin:0 0 10px;font-weight:700;letter-spacing:-.01em}
+.intro{color:var(--muted);margin:0 0 28px;max-width:60ch}
+.stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.stepper span{height:4px;border-radius:2px;background:var(--line)}
+.stepper span.done{background:var(--lab)}
+.stepmeta{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-bottom:18px}
+.stepmeta strong{color:var(--ink);font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px}
+@media (max-width:560px){.card{padding:18px}}
+.field{margin-bottom:22px}
+.lbl{display:block;font-weight:600;margin-bottom:8px}
+input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{
+  width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+textarea{min-height:88px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:15px;padding:8px 14px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--lab);border-color:var(--lab);color:var(--lab-ink)}
+.hint{font-size:14px;color:var(--muted);margin:-4px 0 10px}
+.err{color:var(--err);font-size:14px;margin-top:6px}
+.scale-note{font-size:14px;color:var(--muted);border-left:3px solid var(--lab);padding:4px 0 4px 12px;margin:0 0 20px}
+.rq{padding:22px 0;border-top:1px solid var(--line)}
+.rq.first{border-top:0;padding-top:0}
+.q{font-weight:600;margin:0 0 12px}
+.bar{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:3px}
+.bar button{height:46px;border:0;background:var(--bg);color:var(--muted);font:inherit;font-weight:600;font-size:15px;cursor:pointer;border-radius:0;padding:0;transition:background-color .15s,color .15s}
+.bar button:first-child{border-radius:8px 0 0 8px}
+.bar button:last-child{border-radius:0 8px 8px 0}
+.bar.low{--c:var(--low)} .bar.mid{--c:var(--mid)} .bar.high{--c:var(--high)}
+.bar button.on{background:var(--c);color:#fff}
+.bar button.sel{box-shadow:inset 0 0 0 2px var(--ink)}
+.ends{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);margin-top:6px}
+.improve{margin-top:14px}
+.improve .lbl{font-weight:500;font-size:15px}
+.nav{display:flex;justify-content:space-between;gap:12px;margin-top:24px}
+.btn{font:inherit;font-weight:600;padding:12px 22px;border-radius:10px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.btn.primary{background:var(--lab);border-color:var(--lab);color:var(--lab-ink);margin-left:auto}
+.check{display:flex;gap:12px;align-items:flex-start}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--lab);flex:none}
+.thanks h2{font-size:28px;margin:0 0 8px}
+.thanks p{color:var(--muted);margin:0 0 24px}
+:focus-visible{outline:3px solid var(--lab);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.bar button{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">ARKRAY</div>
+    <div class="lang" role="group" aria-label="Language" id="lang"></div>
+  </div>
+  <h1 id="title"></h1>
+  <p class="intro" id="intro"></p>
+  <div id="progress"></div>
+  <main id="app"></main>
+</div>
+
+<script>
+/* Para producción: pega aquí la URL de tu Google Apps Script (Web App) y cada
+   respuesta se añadirá como una fila en Google Sheets. Vacío = modo demo. */
+const SHEETS_URL = "";
+
+const INSTRUMENTS = ["HA-8180V","HA-8190V","HA-8380V","AX-4060","AX-4030","AI-4510","iSed","MiniiSed"];
+const COUNTRIES = ["AR","BO","BR","CA","CL","CO","CR","CU","DO","EC","SV","US","GT","HN","MX","NI","PA","PY","PE","PR","UY","VE"];
+const STEPS = [
+  { key:"participant" },
+  { key:"content",    ratings:["relevance","materials","structure","pace"] },
+  { key:"instructor", ratings:["clarity","knowledge","participation","problems"] },
+  { key:"results",    ratings:["before","after","support","facilities","overall","nps"] }
+];
+
+const T = {
+  es:{
+    title:"Evaluación de la capacitación",
+    intro:"Gracias por dedicarnos unos minutos. Sus respuestas nos ayudan a mejorar nuestras capacitaciones.",
+    steps:["Participante","Contenido","Instructor","Resultados"], stepOf:"Paso {n} de 4",
+    scaleNote:"Califique cada aspecto del 1 al 10, donde 1 significa muy mal o totalmente en desacuerdo y 10 significa excelente o totalmente de acuerdo.",
+    name:"Nombre completo", country:"País", choose:"Seleccione…", other:"Otro", company:"Compañía",
+    email:"Correo electrónico", phone:"Teléfono (opcional)", date:"Fecha de la capacitación",
+    type:"Tipo de capacitación", types:{operator:"Operador",service:"Servicio técnico",lis:"Integración LIS",update:"Actualización"},
+    modality:"Modalidad", modalities:{arkray:"Presencial en instalaciones de ARKRAY",site:"Presencial en sus instalaciones",virtual:"Virtual"},
+    instruments:"Instrumentos de la capacitación", instrHint:"Seleccione todos los que apliquen.",
+    q:{
+      relevance:"¿El contenido fue relevante y útil para su trabajo?",
+      materials:"¿Los materiales proporcionados fueron útiles y de calidad?",
+      structure:"¿La capacitación estuvo bien estructurada y organizada?",
+      pace:"¿La duración y el ritmo de la capacitación fueron adecuados?",
+      clarity:"¿El instructor explicó los temas de manera clara y comprensible?",
+      knowledge:"¿El instructor demostró un sólido conocimiento de los instrumentos y técnicas?",
+      participation:"¿Se fomentó la participación y se atendieron sus preguntas adecuadamente?",
+      problems:"¿El instructor le ayudó a resolver problemas específicos relacionados con los equipos?",
+      before:"Antes de la capacitación, ¿qué tan seguro se sentía dando soporte a estos instrumentos?",
+      after:"Y ahora, después de la capacitación, ¿qué tan seguro se siente?",
+      support:"¿Lo aprendido le ayudará a reparar y dar soporte a nuestros instrumentos con mayor seguridad y eficacia?",
+      facilities:"¿Cómo fue la atención, las comidas y el soporte durante su estancia en nuestras instalaciones?",
+      overall:"¿Cuál es su nivel de satisfacción general con la capacitación recibida?",
+      nps:"¿Qué tan probable es que recomiende esta capacitación a un colega?"
+    },
+    low:"Muy mal", high:"Excelente", npsLow:"Nada probable", npsHigh:"Muy probable",
+    improve:"¿Qué podríamos mejorar en este aspecto? (opcional)",
+    topics:"¿Qué tema le gustaría profundizar en una próxima capacitación? (opcional)",
+    comments:"Sugerencias o comentarios adicionales (opcional)",
+    consent:"Acepto que ARKRAY me contacte en relación con esta capacitación.",
+    back:"Atrás", next:"Siguiente", submit:"Enviar evaluación",
+    required:"Este campo es obligatorio.", emailInvalid:"Revise el formato del correo.",
+    ratingRequired:"Seleccione una calificación.", instrRequired:"Seleccione al menos un instrumento.",
+    thanksTitle:"¡Gracias!", thanksText:"Su evaluación fue enviada. Valoramos mucho su opinión.", again:"Responder otra evaluación"
+  },
+  en:{
+    title:"Training Evaluation",
+    intro:"Thank you for taking a few minutes. Your answers help us improve our training.",
+    steps:["Participant","Content","Instructor","Results"], stepOf:"Step {n} of 4",
+    scaleNote:"Rate each aspect from 1 to 10, where 1 means very poor or strongly disagree and 10 means excellent or strongly agree.",
+    name:"Full name", country:"Country", choose:"Select…", other:"Other", company:"Company",
+    email:"Email", phone:"Phone (optional)", date:"Training date",
+    type:"Training type", types:{operator:"Operator",service:"Technical service",lis:"LIS integration",update:"Update"},
+    modality:"Format", modalities:{arkray:"On-site at ARKRAY facilities",site:"On-site at your facility",virtual:"Virtual"},
+    instruments:"Instruments covered", instrHint:"Select all that apply.",
+    q:{
+      relevance:"Was the content relevant and useful for your work?",
+      materials:"Were the materials provided useful and of good quality?",
+      structure:"Was the training well structured and organized?",
+      pace:"Were the length and pace of the training appropriate?",
+      clarity:"Did the instructor explain the topics clearly and understandably?",
+      knowledge:"Did the instructor show solid knowledge of the instruments and techniques?",
+      participation:"Was participation encouraged and were your questions answered properly?",
+      problems:"Did the instructor help you solve specific problems with the equipment?",
+      before:"Before the training, how confident did you feel supporting these instruments?",
+      after:"And now, after the training, how confident do you feel?",
+      support:"Will what you learned help you repair and support our instruments more confidently and effectively?",
+      facilities:"How were the hospitality, meals and support during your stay at our facilities?",
+      overall:"What is your overall satisfaction with the training you received?",
+      nps:"How likely are you to recommend this training to a colleague?"
+    },
+    low:"Very poor", high:"Excellent", npsLow:"Not at all likely", npsHigh:"Extremely likely",
+    improve:"What could we improve here? (optional)",
+    topics:"Which topic would you like to explore further in a future training? (optional)",
+    comments:"Additional suggestions or comments (optional)",
+    consent:"I agree that ARKRAY may contact me about this training.",
+    back:"Back", next:"Next", submit:"Submit evaluation",
+    required:"This field is required.", emailInvalid:"Check the email format.",
+    ratingRequired:"Select a rating.", instrRequired:"Select at least one instrument.",
+    thanksTitle:"Thank you!", thanksText:"Your evaluation has been submitted. We truly value your feedback.", again:"Submit another response"
+  },
+  pt:{
+    title:"Avaliação do Treinamento",
+    intro:"Obrigado por dedicar alguns minutos. Suas respostas nos ajudam a melhorar nossos treinamentos.",
+    steps:["Participante","Conteúdo","Instrutor","Resultados"], stepOf:"Etapa {n} de 4",
+    scaleNote:"Avalie cada aspecto de 1 a 10, onde 1 significa muito ruim ou discordo totalmente e 10 significa excelente ou concordo totalmente.",
+    name:"Nome completo", country:"País", choose:"Selecione…", other:"Outro", company:"Empresa",
+    email:"E-mail", phone:"Telefone (opcional)", date:"Data do treinamento",
+    type:"Tipo de treinamento", types:{operator:"Operador",service:"Assistência técnica",lis:"Integração LIS",update:"Atualização"},
+    modality:"Modalidade", modalities:{arkray:"Presencial nas instalações da ARKRAY",site:"Presencial nas suas instalações",virtual:"Virtual"},
+    instruments:"Instrumentos do treinamento", instrHint:"Selecione todos os que se aplicam.",
+    q:{
+      relevance:"O conteúdo foi relevante e útil para o seu trabalho?",
+      materials:"Os materiais fornecidos foram úteis e de qualidade?",
+      structure:"O treinamento foi bem estruturado e organizado?",
+      pace:"A duração e o ritmo do treinamento foram adequados?",
+      clarity:"O instrutor explicou os temas de forma clara e compreensível?",
+      knowledge:"O instrutor demonstrou sólido conhecimento dos instrumentos e técnicas?",
+      participation:"A participação foi incentivada e suas perguntas foram respondidas adequadamente?",
+      problems:"O instrutor ajudou você a resolver problemas específicos dos equipamentos?",
+      before:"Antes do treinamento, quão seguro você se sentia para dar suporte a estes instrumentos?",
+      after:"E agora, depois do treinamento, quão seguro você se sente?",
+      support:"O que você aprendeu ajudará a reparar e dar suporte aos nossos instrumentos com mais segurança e eficácia?",
+      facilities:"Como foram o atendimento, as refeições e o suporte durante sua estadia em nossas instalações?",
+      overall:"Qual é o seu nível de satisfação geral com o treinamento recebido?",
+      nps:"Qual a probabilidade de você recomendar este treinamento a um colega?"
+    },
+    low:"Muito ruim", high:"Excelente", npsLow:"Nada provável", npsHigh:"Muito provável",
+    improve:"O que poderíamos melhorar neste aspecto? (opcional)",
+    topics:"Qual tema você gostaria de aprofundar em um próximo treinamento? (opcional)",
+    comments:"Sugestões ou comentários adicionais (opcional)",
+    consent:"Concordo que a ARKRAY entre em contato comigo sobre este treinamento.",
+    back:"Voltar", next:"Próximo", submit:"Enviar avaliação",
+    required:"Este campo é obrigatório.", emailInvalid:"Verifique o formato do e-mail.",
+    ratingRequired:"Selecione uma nota.", instrRequired:"Selecione pelo menos um instrumento.",
+    thanksTitle:"Obrigado!", thanksText:"Sua avaliação foi enviada. Valorizamos muito sua opinião.", again:"Responder outra avaliação"
+  }
+};
+
+function detectLang(){
+  const l = (navigator.language||"es").slice(0,2).toLowerCase();
+  return T[l] ? l : "es";
+}
+function today(){ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+function blank(){
+  return {name:"",country:"",company:"",email:"",phone:"",date:today(),type:"",modality:"",
+          instruments:[],ratings:{},improve:{},topics:"",comments:"",consent:false};
+}
+const state = { lang:detectLang(), step:0, data:blank(), errors:{}, done:false };
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const t = () => T[state.lang];
+
+function countryName(code){
+  if(code==="OTHER") return t().other;
+  try{ return new Intl.DisplayNames([state.lang],{type:"region"}).of(code); }catch(e){ return code; }
+}
+function visibleRatings(step){
+  return (STEPS[step].ratings||[]).filter(q => q!=="facilities" || state.data.modality==="arkray");
+}
+function tone(q,v){
+  if(q==="nps") return v<=6?"low":v<=8?"mid":"high";
+  return v<=4?"low":v<=7?"mid":"high";
+}
+
+/* ---------- render ---------- */
+function renderChrome(){
+  document.documentElement.lang = state.lang;
+  document.title = t().title + " ARKRAY";
+  document.getElementById("lang").innerHTML = ["en","es","pt"].map(l =>
+    `<button type="button" data-lang="${l}" aria-pressed="${l===state.lang}">${l.toUpperCase()}</button>`).join("");
+  document.getElementById("title").textContent = t().title;
+  document.getElementById("intro").textContent = t().intro;
+  const p = document.getElementById("progress");
+  if(state.done){ p.innerHTML=""; return; }
+  p.innerHTML = `<div class="stepper" aria-hidden="true">${STEPS.map((_,i)=>`<span class="${i<=state.step?"done":""}"></span>`).join("")}</div>
+    <div class="stepmeta"><strong>${esc(t().steps[state.step])}</strong><span>${esc(t().stepOf.replace("{n}",state.step+1))}</span></div>`;
+}
+
+function errHtml(key){ return state.errors[key] ? `<div class="err" id="err-${key}">${esc(state.errors[key])}</div>` : ""; }
+
+function textField(key,type,opts={}){
+  return `<div class="field"><label class="lbl" for="f-${key}">${esc(t()[key])}</label>
+    <input id="f-${key}" type="${type}" data-field="${key}" value="${esc(state.data[key])}" ${opts.auto?`autocomplete="${opts.auto}"`:""}
+      ${state.errors[key]?`aria-invalid="true" aria-describedby="err-${key}"`:""}>${errHtml(key)}</div>`;
+}
+function choiceField(key,options){
+  return `<div class="field" role="group" aria-labelledby="l-${key}"><span class="lbl" id="l-${key}">${esc(t()[key])}</span>
+    <div class="chips">${Object.entries(options).map(([v,label])=>
+      `<button type="button" class="chip" data-choice="${key}" data-value="${v}" aria-pressed="${state.data[key]===v}">${esc(label)}</button>`).join("")}</div>
+    ${errHtml(key)}</div>`;
+}
+
+function renderParticipant(){
+  const sorted = [...COUNTRIES].sort((a,b)=>countryName(a).localeCompare(countryName(b),state.lang));
+  sorted.push("OTHER");
+  return `
+    ${textField("name","text",{auto:"name"})}
+    <div class="grid2">
+      <div class="field"><label class="lbl" for="f-country">${esc(t().country)}</label>
+        <select id="f-country" data-field="country" ${state.errors.country?'aria-invalid="true"':""}>
+          <option value="">${esc(t().choose)}</option>
+          ${sorted.map(c=>`<option value="${c}" ${state.data.country===c?"selected":""}>${esc(countryName(c))}</option>`).join("")}
+        </select>${errHtml("country")}</div>
+      ${textField("company","text",{auto:"organization"})}
+      ${textField("email","email",{auto:"email"})}
+      ${textField("phone","tel",{auto:"tel"})}
+    </div>
+    ${textField("date","date")}
+    ${choiceField("type",t().types)}
+    ${choiceField("modality",t().modalities)}
+    <div class="field" role="group" aria-labelledby="l-instr"><span class="lbl" id="l-instr">${esc(t().instruments)}</span>
+      <p class="hint">${esc(t().instrHint)}</p>
+      <div class="chips">${INSTRUMENTS.map(i=>
+        `<button type="button" class="chip" data-instr="${i}" aria-pressed="${state.data.instruments.includes(i)}">${i}</button>`).join("")}</div>
+      ${errHtml("instruments")}</div>`;
+}
+
+function ratingBlock(q,first){
+  const min = q==="nps"?0:1;
+  const v = state.data.ratings[q];
+  const has = v!==undefined;
+  const cls = has ? tone(q,v) : "";
+  let btns = "";
+  for(let n=min;n<=10;n++){
+    const on = has && n<=v, sel = has && n===v;
+    btns += `<button type="button" data-rate="${q}" data-value="${n}" class="${on?"on":""} ${sel?"sel":""}" aria-pressed="${sel}" aria-label="${n}">${n}</button>`;
+  }
+  const lo = q==="nps"?t().npsLow:t().low, hi = q==="nps"?t().npsHigh:t().high;
+  const askWhy = has && v<=6 && q!=="before";
+  return `<div class="rq ${first?"first":""}" id="rq-${q}" role="group" aria-labelledby="q-${q}">
+    <p class="q" id="q-${q}">${esc(t().q[q])}</p>
+    <div class="bar ${cls}" style="--n:${11-min}">${btns}</div>
+    <div class="ends"><span>${min} ${esc(lo)}</span><span>10 ${esc(hi)}</span></div>
+    ${errHtml("r-"+q)}
+    ${askWhy?`<div class="improve"><label class="lbl" for="imp-${q}">${esc(t().improve)}</label>
+      <textarea id="imp-${q}" data-improve="${q}">${esc(state.data.improve[q]||"")}</textarea></div>`:""}
+  </div>`;
+}
+
+function renderRatings(step){
+  const qs = visibleRatings(step);
+  let html = `<p class="scale-note">${esc(t().scaleNote)}</p>` + qs.map((q,i)=>ratingBlock(q,i===0)).join("");
+  if(STEPS[step].key==="results"){
+    html += `<div class="rq"><label class="lbl" for="f-topics">${esc(t().topics)}</label>
+        <textarea id="f-topics" data-field="topics">${esc(state.data.topics)}</textarea></div>
+      <div class="field"><label class="lbl" for="f-comments">${esc(t().comments)}</label>
+        <textarea id="f-comments" data-field="comments">${esc(state.data.comments)}</textarea></div>
+      <label class="check"><input type="checkbox" id="f-consent" ${state.data.consent?"checked":""}><span>${esc(t().consent)}</span></label>`;
+  }
+  return html;
+}
+
+function render(){
+  renderChrome();
+  const app = document.getElementById("app");
+  if(state.done){
+    app.innerHTML = `<div class="card thanks"><h2>${esc(t().thanksTitle)}</h2><p>${esc(t().thanksText)}</p>
+      <button type="button" class="btn primary" id="again" style="margin-left:0">${esc(t().again)}</button></div>`;
+    return;
+  }
+  const body = state.step===0 ? renderParticipant() : renderRatings(state.step);
+  const last = state.step===STEPS.length-1;
+  app.innerHTML = `<div class="card">${body}</div>
+    <div class="nav">
+      ${state.step>0?`<button type="button" class="btn" id="back">${esc(t().back)}</button>`:""}
+      <button type="button" class="btn primary" id="${last?"submit":"next"}">${esc(last?t().submit:t().next)}</button>
+    </div>`;
+}
+
+function rerenderRating(q){
+  const el = document.getElementById("rq-"+q);
+  if(!el) return;
+  const first = el.classList.contains("first");
+  el.outerHTML = ratingBlock(q,first);
+}
+
+/* ---------- validation ---------- */
+function validate(step){
+  const e = {}, d = state.data, m = t();
+  if(step===0){
+    ["name","company","date"].forEach(k=>{ if(!d[k].trim()) e[k]=m.required; });
+    if(!d.country) e.country=m.required;
+    if(!d.email.trim()) e.email=m.required;
+    else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email.trim())) e.email=m.emailInvalid;
+    if(!d.type) e.type=m.required;
+    if(!d.modality) e.modality=m.required;
+    if(!d.instruments.length) e.instruments=m.instrRequired;
+  } else {
+    visibleRatings(step).forEach(q=>{ if(d.ratings[q]===undefined) e["r-"+q]=m.ratingRequired; });
+  }
+  state.errors = e;
+  return !Object.keys(e).length;
+}
+function focusFirstError(){
+  const err = document.querySelector(".err");
+  if(!err) return;
+  const block = err.closest(".field, .rq");
+  (block.querySelector("input,select,textarea,button")||block).focus();
+  block.scrollIntoView({block:"center"});
+}
+
+/* ---------- submit ---------- */
+function buildRow(){
+  const d = state.data, row = {
+    timestamp:new Date().toISOString(), language:state.lang,
+    name:d.name.trim(), country:d.country, company:d.company.trim(), email:d.email.trim(), phone:d.phone.trim(),
+    training_date:d.date, training_type:d.type, modality:d.modality, instruments:d.instruments.join(", ")
+  };
+  STEPS.flatMap(s=>s.ratings||[]).forEach(q=>{
+    row[q] = d.ratings[q] ?? "";
+    row[q+"_improve"] = (d.ratings[q]!==undefined && d.ratings[q]<=6) ? (d.improve[q]||"").trim() : "";
+  });
+  row.confidence_gain = (d.ratings.after!==undefined && d.ratings.before!==undefined) ? d.ratings.after - d.ratings.before : "";
+  row.topics = d.topics.trim(); row.comments = d.comments.trim(); row.consent = d.consent ? "yes" : "no";
+  return row;
+}
+function submit(){
+  const row = buildRow();
+  if(SHEETS_URL){
+    fetch(SHEETS_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify(row)}).catch(()=>{});
+  }
+  state.done = true;
+  render(); window.scrollTo(0,0);
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", ev=>{
+  const b = ev.target.closest("button");
+  if(!b) return;
+  if(b.dataset.lang){ state.lang=b.dataset.lang; if(Object.keys(state.errors).length) validate(state.step); render(); return; }
+  if(b.dataset.rate){
+    const q=b.dataset.rate; state.data.ratings[q]=+b.dataset.value; delete state.errors["r-"+q];
+    rerenderRating(q);
+    document.querySelector(`#rq-${q} button[data-value="${b.dataset.value}"]`)?.focus();
+    return;
+  }
+  if(b.dataset.choice){
+    state.data[b.dataset.choice]=b.dataset.value; delete state.errors[b.dataset.choice]; render(); return;
+  }
+  if(b.dataset.instr){
+    const list=state.data.instruments, i=list.indexOf(b.dataset.instr);
+    i>=0 ? list.splice(i,1) : list.push(b.dataset.instr);
+    delete state.errors.instruments; render();
+    document.querySelector(`[data-instr="${b.dataset.instr}"]`)?.focus(); return;
+  }
+  if(b.id==="next"){
+    if(validate(state.step)){ state.step++; state.errors={}; render(); window.scrollTo(0,0); }
+    else { render(); focusFirstError(); }
+    return;
+  }
+  if(b.id==="back"){ state.step--; state.errors={}; render(); window.scrollTo(0,0); return; }
+  if(b.id==="submit"){ if(validate(state.step)) submit(); else { render(); focusFirstError(); } return; }
+  if(b.id==="again"){ state.data=blank(); state.step=0; state.errors={}; state.done=false; render(); window.scrollTo(0,0); }
+});
+document.addEventListener("input", ev=>{
+  const el = ev.target;
+  if(el.dataset.field){ state.data[el.dataset.field]=el.value; }
+  if(el.dataset.improve){ state.data.improve[el.dataset.improve]=el.value; }
+});
+document.addEventListener("change", ev=>{
+  const el = ev.target;
+  if(el.id==="f-consent") state.data.consent = el.checked;
+  if(el.dataset.field) state.data[el.dataset.field]=el.value;
+});
+
+render();
+</script>
+</body>
+</html>
