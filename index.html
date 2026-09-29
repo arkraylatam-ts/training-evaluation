@@ -74,6 +74,11 @@ textarea{min-height:88px;resize:vertical}
 .btn.primary{background:var(--lab);border-color:var(--lab);color:var(--lab-ink);margin-left:auto}
 .check{display:flex;gap:12px;align-items:flex-start}
 .check input{width:20px;height:20px;margin-top:2px;accent-color:var(--lab);flex:none}
+.consent-box{border:2px solid var(--lab);border-radius:10px;padding:14px 16px;margin-top:8px}
+.contact{margin-top:16px}
+.privacy{font-size:13px;color:var(--muted);margin-top:24px;border-top:1px solid var(--line);padding-top:16px}
+.privacy h3{font-size:14px;margin:0 0 8px;color:var(--ink)}
+.privacy p{margin:0 0 8px}
 .thanks h2{font-size:28px;margin:0 0 8px}
 .thanks p{color:var(--muted);margin:0 0 24px}
 :focus-visible{outline:3px solid var(--lab);outline-offset:2px}
@@ -95,7 +100,7 @@ textarea{min-height:88px;resize:vertical}
 <script>
 /* Para producción: pega aquí la URL de tu Google Apps Script (Web App) y cada
    respuesta se añadirá como una fila en Google Sheets. Vacío = modo demo. */
-const SHEETS_URL = "";
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyQPXvmcIP5oAX78WoPwtLrhhfSnn0hXcpczL5wYZkI6mx58TggQlSsfJYjkXQnfzqEnw/exec";
 
 const INSTRUMENTS = ["HA-8180V","HA-8190V","HA-8380V","AX-4060","AX-4030","AI-4510","iSed","MiniiSed"];
 const COUNTRIES = ["AR","BO","BR","CA","CL","CO","CR","CU","DO","EC","SV","US","GT","HN","MX","NI","PA","PY","PE","PR","UY","VE"];
@@ -217,18 +222,57 @@ const T = {
   }
 };
 
+const P = {
+  es:{
+    intro:"Gracias por dedicarnos unos minutos. Esta evaluación es anónima y sus respuestas nos ayudan a mejorar nuestras capacitaciones.",
+    name:"Nombre", email:"Correo electrónico",
+    consent:"Deseo que ARKRAY me contacte sobre esta capacitación, y acepto que mi nombre y correo se almacenen en servidores de Google fuera de mi país para ese único fin.",
+    noPersonal:"Por favor, no incluya datos personales en sus comentarios.",
+    privacyTitle:"Aviso de privacidad",
+    privacy:[
+      "Esta evaluación es anónima. Sus respuestas se utilizarán únicamente para evaluar y mejorar las capacitaciones de ARKRAY, y no serán vendidas ni cedidas a terceros. Solo el equipo de soporte técnico de ARKRAY tiene acceso a ellas.",
+      "Si decide dejar sus datos de contacto, estos se usarán exclusivamente para comunicarnos con usted sobre esta capacitación y se eliminarán en un plazo máximo de 24 meses. Los datos se almacenan en servidores de Google ubicados fuera de su país, posiblemente en los Estados Unidos.",
+      "Puede solicitar en cualquier momento el acceso, la corrección o la eliminación de sus datos, o retirar su consentimiento, escribiendo a arkraylatam@gmail.com."
+    ]
+  },
+  en:{
+    intro:"Thank you for taking a few minutes. This evaluation is anonymous, and your answers help us improve our training.",
+    name:"Name", email:"Email",
+    consent:"I would like ARKRAY to contact me about this training, and I agree that my name and email will be stored on Google servers outside my country for that sole purpose.",
+    noPersonal:"Please do not include personal information in your comments.",
+    privacyTitle:"Privacy notice",
+    privacy:[
+      "This evaluation is anonymous. Your answers will be used only to evaluate and improve ARKRAY's training, and will not be sold or shared with third parties. Only ARKRAY's technical support team has access to them.",
+      "If you choose to leave your contact details, they will be used only to contact you about this training and will be deleted within 24 months at the latest. Data is stored on Google servers located outside your country, possibly in the United States.",
+      "You may request access to, correction or deletion of your data, or withdraw your consent, at any time by writing to arkraylatam@gmail.com."
+    ]
+  },
+  pt:{
+    intro:"Obrigado por dedicar alguns minutos. Esta avaliação é anônima e suas respostas nos ajudam a melhorar nossos treinamentos.",
+    name:"Nome", email:"E-mail",
+    consent:"Desejo que a ARKRAY entre em contato comigo sobre este treinamento e concordo que meu nome e e-mail sejam armazenados em servidores do Google fora do meu país, exclusivamente para essa finalidade.",
+    noPersonal:"Por favor, não inclua dados pessoais em seus comentários.",
+    privacyTitle:"Aviso de privacidade",
+    privacy:[
+      "Esta avaliação é anônima. Suas respostas serão utilizadas exclusivamente para avaliar e melhorar os treinamentos da ARKRAY e não serão vendidas nem compartilhadas com terceiros. Apenas a equipe de suporte técnico da ARKRAY tem acesso a elas.",
+      "Caso opte por informar seus dados de contato, eles serão usados somente para entrarmos em contato sobre este treinamento e serão excluídos no prazo máximo de 24 meses. Os dados são armazenados em servidores do Google localizados fora do seu país, possivelmente nos Estados Unidos.",
+      "Você pode solicitar a qualquer momento o acesso, a correção ou a exclusão dos seus dados, ou revogar seu consentimento, escrevendo para arkraylatam@gmail.com."
+    ]
+  }
+};
+
 function detectLang(){
   const l = (navigator.language||"es").slice(0,2).toLowerCase();
   return T[l] ? l : "es";
 }
 function today(){ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
 function blank(){
-  return {name:"",country:"",company:"",email:"",phone:"",date:today(),type:"",modality:"",
+  return {name:"",country:"",company:"",email:"",date:today(),type:"",modality:"",
           instruments:[],ratings:{},improve:{},topics:"",comments:"",consent:false};
 }
 const state = { lang:detectLang(), step:0, data:blank(), errors:{}, done:false };
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const t = () => T[state.lang];
+const t = () => Object.assign({}, T[state.lang], P[state.lang]);
 
 function countryName(code){
   if(code==="OTHER") return t().other;
@@ -274,7 +318,6 @@ function renderParticipant(){
   const sorted = [...COUNTRIES].sort((a,b)=>countryName(a).localeCompare(countryName(b),state.lang));
   sorted.push("OTHER");
   return `
-    ${textField("name","text",{auto:"name"})}
     <div class="grid2">
       <div class="field"><label class="lbl" for="f-country">${esc(t().country)}</label>
         <select id="f-country" data-field="country" ${state.errors.country?'aria-invalid="true"':""}>
@@ -282,8 +325,6 @@ function renderParticipant(){
           ${sorted.map(c=>`<option value="${c}" ${state.data.country===c?"selected":""}>${esc(countryName(c))}</option>`).join("")}
         </select>${errHtml("country")}</div>
       ${textField("company","text",{auto:"organization"})}
-      ${textField("email","email",{auto:"email"})}
-      ${textField("phone","tel",{auto:"tel"})}
     </div>
     ${textField("date","date")}
     ${choiceField("type",t().types)}
@@ -322,10 +363,16 @@ function renderRatings(step){
   let html = `<p class="scale-note">${esc(t().scaleNote)}</p>` + qs.map((q,i)=>ratingBlock(q,i===0)).join("");
   if(STEPS[step].key==="results"){
     html += `<div class="rq"><label class="lbl" for="f-topics">${esc(t().topics)}</label>
+        <p class="hint">${esc(t().noPersonal)}</p>
         <textarea id="f-topics" data-field="topics">${esc(state.data.topics)}</textarea></div>
       <div class="field"><label class="lbl" for="f-comments">${esc(t().comments)}</label>
+        <p class="hint">${esc(t().noPersonal)}</p>
         <textarea id="f-comments" data-field="comments">${esc(state.data.comments)}</textarea></div>
-      <label class="check"><input type="checkbox" id="f-consent" ${state.data.consent?"checked":""}><span>${esc(t().consent)}</span></label>`;
+      <div class="consent-box">
+        <label class="check"><input type="checkbox" id="f-consent" ${state.data.consent?"checked":""}><span>${esc(t().consent)}</span></label>
+        ${state.data.consent?`<div class="contact grid2">${textField("name","text",{auto:"name"})}${textField("email","email",{auto:"email"})}</div>`:""}
+      </div>
+      <div class="privacy"><h3>${esc(t().privacyTitle)}</h3>${t().privacy.map(x=>`<p>${esc(x)}</p>`).join("")}</div>`;
   }
   return html;
 }
@@ -358,15 +405,18 @@ function rerenderRating(q){
 function validate(step){
   const e = {}, d = state.data, m = t();
   if(step===0){
-    ["name","company","date"].forEach(k=>{ if(!d[k].trim()) e[k]=m.required; });
+    ["company","date"].forEach(k=>{ if(!d[k].trim()) e[k]=m.required; });
     if(!d.country) e.country=m.required;
-    if(!d.email.trim()) e.email=m.required;
-    else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email.trim())) e.email=m.emailInvalid;
     if(!d.type) e.type=m.required;
     if(!d.modality) e.modality=m.required;
     if(!d.instruments.length) e.instruments=m.instrRequired;
   } else {
     visibleRatings(step).forEach(q=>{ if(d.ratings[q]===undefined) e["r-"+q]=m.ratingRequired; });
+    if(STEPS[step].key==="results" && d.consent){
+      if(!d.name.trim()) e.name=m.required;
+      if(!d.email.trim()) e.email=m.required;
+      else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email.trim())) e.email=m.emailInvalid;
+    }
   }
   state.errors = e;
   return !Object.keys(e).length;
@@ -383,7 +433,7 @@ function focusFirstError(){
 function buildRow(){
   const d = state.data, row = {
     timestamp:new Date().toISOString(), language:state.lang,
-    name:d.name.trim(), country:d.country, company:d.company.trim(), email:d.email.trim(), phone:d.phone.trim(),
+    country:d.country, company:d.company.trim(),
     training_date:d.date, training_type:d.type, modality:d.modality, instruments:d.instruments.join(", ")
   };
   STEPS.flatMap(s=>s.ratings||[]).forEach(q=>{
@@ -392,6 +442,8 @@ function buildRow(){
   });
   row.confidence_gain = (d.ratings.after!==undefined && d.ratings.before!==undefined) ? d.ratings.after - d.ratings.before : "";
   row.topics = d.topics.trim(); row.comments = d.comments.trim(); row.consent = d.consent ? "yes" : "no";
+  row.contact_name = d.consent ? d.name.trim() : "";
+  row.contact_email = d.consent ? d.email.trim() : "";
   return row;
 }
 function submit(){
@@ -439,7 +491,7 @@ document.addEventListener("input", ev=>{
 });
 document.addEventListener("change", ev=>{
   const el = ev.target;
-  if(el.id==="f-consent") state.data.consent = el.checked;
+  if(el.id==="f-consent"){ state.data.consent = el.checked; delete state.errors.name; delete state.errors.email; render(); document.getElementById("f-consent")?.focus(); }
   if(el.dataset.field) state.data[el.dataset.field]=el.value;
 });
 
